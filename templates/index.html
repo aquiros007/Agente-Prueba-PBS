@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Auditor Conciliador — Carga de documentos</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --plane:#f9f9f7; --surface:#fcfcfb; --ink:#0b0b0b; --ink2:#52514e;
+    --muted:#898781; --grid:#e1e0d9; --line:#c3c2b7; --ring:rgba(11,11,11,.10);
+    --azul:#2a78d6; --verde:#0ca30c;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --plane:#0d0d0d; --surface:#1a1a19; --ink:#fff; --ink2:#c3c2b7;
+      --muted:#898781; --grid:#2c2c2a; --line:#383835; --ring:rgba(255,255,255,.10);
+      --azul:#3987e5;
+    }
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--plane); color:var(--ink);
+    font-family:system-ui,-apple-system,"Segoe UI",sans-serif; line-height:1.5; }
+  .wrap { max-width:920px; margin:0 auto; padding:40px 20px 60px; }
+  header { margin-bottom:6px; }
+  h1 { font-size:24px; margin:0 0 6px; }
+  .sub { color:var(--ink2); font-size:14px; margin-bottom:28px; }
+  form { display:flex; flex-direction:column; gap:20px; }
+  .zonas { display:grid; gap:18px; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); }
+  .zona { background:var(--surface); border:1px solid var(--ring); border-radius:14px; padding:22px; }
+  .zona h2 { font-size:16px; margin:0 0 2px; display:flex; align-items:center; gap:9px; }
+  .zona .rol { font-size:12.5px; color:var(--muted); margin-bottom:16px; }
+  .badge { font-size:11px; font-weight:700; padding:2px 9px; border-radius:20px;
+    background:color-mix(in srgb, var(--azul) 15%, var(--surface)); color:var(--azul);
+    border:1px solid color-mix(in srgb, var(--azul) 40%, transparent); }
+  .drop { display:flex; flex-direction:column; align-items:center; justify-content:center;
+    min-height:150px; border:2px dashed var(--line); border-radius:12px; padding:26px 16px;
+    text-align:center; cursor:pointer; transition:border-color .15s, background .15s; }
+  .drop:hover, .drop.over { border-color:var(--azul); background:color-mix(in srgb, var(--azul) 7%, var(--surface)); }
+  .drop .icono { font-size:30px; }
+  .drop .txt { font-size:13.5px; color:var(--ink2); margin-top:8px; }
+  .drop .txt b { color:var(--ink); }
+  .drop .hint { font-size:12px; color:var(--muted); margin-top:4px; }
+  .drop input[type=file] { display:none; }
+  .archivo { margin-top:12px; font-size:13px; display:none; align-items:center; gap:8px;
+    background:color-mix(in srgb, var(--verde) 12%, var(--surface));
+    border:1px solid color-mix(in srgb, var(--verde) 40%, transparent);
+    color:var(--verde); font-weight:600; padding:8px 12px; border-radius:8px; }
+  .avanzado { border:1px solid var(--ring); border-radius:12px; background:var(--surface); padding:0 18px; }
+  .avanzado summary { cursor:pointer; padding:14px 0; font-size:13.5px; font-weight:600; }
+  .campos { display:grid; gap:14px; grid-template-columns:1fr 1fr; padding:0 0 18px; }
+  .campos label { display:flex; flex-direction:column; gap:5px; font-size:12.5px; color:var(--ink2); }
+  .campos input { font:inherit; font-size:13.5px; padding:8px 11px; border-radius:8px;
+    border:1px solid var(--line); background:var(--plane); color:var(--ink); }
+  .full { grid-column:1/-1; }
+  .acciones { display:flex; align-items:center; gap:16px; }
+  button { font:inherit; font-size:15px; font-weight:650; padding:13px 28px; border-radius:10px;
+    border:none; cursor:pointer; background:var(--azul); color:#fff; }
+  button:disabled { opacity:.5; cursor:not-allowed; }
+  .nota { font-size:12.5px; color:var(--muted); }
+  .pasos { display:flex; gap:8px; color:var(--muted); font-size:12.5px; margin-top:30px;
+    flex-wrap:wrap; align-items:center; }
+  .pasos b { color:var(--ink2); }
+  footer { margin-top:34px; color:var(--muted); font-size:12px; }
+  a.cruce { color:var(--azul); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Auditor Conciliador · Orden de Compra ↔ Factura</h1>
+    <div class="sub">Cada área carga su documento (Excel o PDF) y el sistema hace el
+      comparativo automático cruzando por número de documento.</div>
+  </header>
+
+  <form action="/conciliar" method="post" enctype="multipart/form-data" id="form">
+    <div class="zonas">
+      <!-- Proveeduría -->
+      <div class="zona">
+        <h2><span class="badge">Proveeduría</span> Orden de Compra</h2>
+        <div class="rol">Sube aquí la OC en Excel (.xlsx) o PDF.</div>
+        <label class="drop" id="drop-a">
+          <div class="icono">📄</div>
+          <div class="txt"><b>Arrastra el archivo</b> o haz clic para elegir</div>
+          <div class="hint">Excel o PDF · máx. 25 MB</div>
+          <input type="file" name="proveeduria" id="file-a" accept=".xlsx,.xlsm,.xls,.pdf" required>
+        </label>
+        <div class="archivo" id="chip-a">✓ <span></span></div>
+      </div>
+
+      <!-- Recibo -->
+      <div class="zona">
+        <h2><span class="badge">Recibo</span> Factura</h2>
+        <div class="rol">Sube aquí la factura en Excel (.xlsx) o PDF.</div>
+        <label class="drop" id="drop-b">
+          <div class="icono">🧾</div>
+          <div class="txt"><b>Arrastra el archivo</b> o haz clic para elegir</div>
+          <div class="hint">Excel o PDF · máx. 25 MB</div>
+          <input type="file" name="recibo" id="file-b" accept=".xlsx,.xlsm,.xls,.pdf" required>
+        </label>
+        <div class="archivo" id="chip-b">✓ <span></span></div>
+      </div>
+    </div>
+
+    <details class="avanzado">
+      <summary>Opciones avanzadas (etiquetas y título)</summary>
+      <div class="campos">
+        <label>Nombre del lado 1
+          <input type="text" name="nombre_a" value="Proveeduría" maxlength="40">
+        </label>
+        <label>Nombre del lado 2
+          <input type="text" name="nombre_b" value="Recibo" maxlength="40">
+        </label>
+        <label class="full">Título del dashboard
+          <input type="text" name="titulo" value="Comparativo Orden de Compra vs Factura" maxlength="80">
+        </label>
+      </div>
+    </details>
+
+    <div class="acciones">
+      <button type="submit" id="btn">Conciliar y ver comparativo →</button>
+      <span class="nota">Los archivos se procesan y no se almacenan.</span>
+    </div>
+  </form>
+
+  <div class="pasos">
+    <b>Cómo funciona:</b> 1) Proveeduría carga la OC · 2) Recibo carga la factura ·
+    3) Se cruzan por N.º de documento · 4) Se muestra el dashboard con confirmaciones y variaciones.
+  </div>
+
+  <footer>
+    Auditor Conciliador · El cruce se hace por número de documento (factura / OC).
+    Los resultados con variación o faltantes requieren revisión manual.
+  </footer>
+</div>
+
+<script>
+  function conectar(dropId, fileId, chipId) {
+    const drop = document.getElementById(dropId);
+    const input = document.getElementById(fileId);
+    const chip = document.getElementById(chipId);
+    function mostrar() {
+      if (input.files && input.files.length) {
+        chip.querySelector('span').textContent = input.files[0].name;
+        chip.style.display = 'inline-flex';
+      } else {
+        chip.style.display = 'none';
+      }
+    }
+    input.addEventListener('change', mostrar);
+    ['dragenter','dragover'].forEach(ev =>
+      drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('over'); }));
+    ['dragleave','drop'].forEach(ev =>
+      drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('over'); }));
+    drop.addEventListener('drop', e => {
+      if (e.dataTransfer.files.length) { input.files = e.dataTransfer.files; mostrar(); }
+    });
+  }
+  conectar('drop-a', 'file-a', 'chip-a');
+  conectar('drop-b', 'file-b', 'chip-b');
+
+  document.getElementById('form').addEventListener('submit', () => {
+    const b = document.getElementById('btn');
+    b.disabled = true; b.textContent = 'Procesando…';
+  });
+</script>
+</body>
+</html>
