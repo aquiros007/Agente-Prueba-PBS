@@ -1,7 +1,7 @@
-# Salidas generadas
+# Salidas generadas (dashboards que produce la herramienta)
 output/
-*.html
-!ejemplos/**
+/dashboard.html
+# Nota: templates/*.html SÍ se versionan (son la interfaz de la app web).
 
 # Python
 __pycache__/

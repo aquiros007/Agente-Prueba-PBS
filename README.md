@@ -39,12 +39,39 @@ sus archivos con columnas, nombres y formatos distintos.
 pip install -r requirements.txt
 ```
 
-Dependencias: `openpyxl` (Excel), `pdfplumber` (PDF) y `reportlab` (solo para
-generar los archivos de ejemplo).
+Dependencias: `openpyxl` (Excel), `pdfplumber` (PDF), `Flask` (app web) y
+`reportlab` (solo para generar los archivos de ejemplo).
 
 ---
 
-## Uso
+## App web — carga de documentos (recomendado)
+
+Página con **dos zonas de carga** donde cada área sube su documento y el
+comparativo se genera solo:
+
+- **Proveeduría** carga la **Orden de Compra** (Excel o PDF).
+- **Recibo** carga la **Factura** (Excel o PDF).
+
+```bash
+python app.py
+```
+
+Luego abre **http://localhost:5000** en el navegador, arrastra los dos archivos
+y presiona **“Conciliar y ver comparativo”**. Se muestra el dashboard con las
+confirmaciones y variaciones.
+
+Para que todo el equipo la use desde sus navegadores, basta con dejar `app.py`
+corriendo en una computadora/servidor de la red; los demás entran a
+`http://IP-DEL-SERVIDOR:5000`. Los archivos se procesan en memoria y no se
+almacenan.
+
+> Variable de entorno opcional: `PORT` para cambiar el puerto (por defecto 5000).
+
+---
+
+## Uso por línea de comandos (CLI)
+
+Alternativa sin navegador, útil para automatizar:
 
 ```bash
 python -m auditor.cli \
@@ -116,6 +143,10 @@ configurable en `auditor/config.py`.
 ## Estructura del proyecto
 
 ```
+app.py              App web (Flask): página de carga + comparativo
+templates/
+  index.html        Página con las dos zonas de carga (Proveeduría / Recibo)
+  error.html        Página de aviso ante archivos faltantes o inválidos
 auditor/
   config.py         Sinónimos de columnas, tolerancias, estados
   utils.py          Normalización de texto, montos, fechas y claves
